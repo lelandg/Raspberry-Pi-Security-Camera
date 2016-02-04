@@ -45,8 +45,8 @@ MDPIN = 15  # Motion Detected pin
 # motion detection and sending email phases:
 WAITSECONDS = 20  # Set to zero to send a message every time motion is detected.
 									# WAITSECONDS also controls the shortest amount of time between printing "Motiono detected".
-WAITEMAILSECONDS = 20  # How long to wait between sending emails. Independent of WAITSECONDS.
-#WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 60 or more, but use what you want.
+#WAITEMAILSECONDS = 20  # How long to wait between sending emails. Independent of WAITSECONDS.
+WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 60 or more, but use what you want.
 
 #global debug
 #debug = True
@@ -116,7 +116,7 @@ class SecurityCamera:
     GPIO.setup(LEDPIN, GPIO.OUT) # Light (blink?) when motion detected
     GPIO.setup(MDPIN, GPIO.IN)
 
-    print "ch = '%s'\r\nDevice Ready" % (ch, )
+    print "ePIR device ready"
     
     # Other member variables:
     self.imgStream = io.BytesIO()
