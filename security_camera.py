@@ -8,6 +8,8 @@
 # Please let me know if you have questions.
 # Author: Leland Green - aboogieman at gmail dot com
 
+__version__ = '0.0.1.1'
+
 import datetime
 import picamera
 import linphone
@@ -177,7 +179,7 @@ class SecurityCamera:
       camera.shutter_speed = camera.exposure_speed
       camera.exposure_mode = 'off'
       g = camera.awb_gains
-      camera.awb_mode = 'off'
+      camera.awb_mode = 'on'
       camera.awb_gains = g
       # Finally, take several photos with the fixed settings
   
