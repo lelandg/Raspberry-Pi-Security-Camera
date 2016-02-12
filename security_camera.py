@@ -17,40 +17,45 @@ from email.MIMEImage import MIMEImage
 import RPi.GPIO as GPIO
 import io
 import logging
+# import stun
 import serial
 import signal
 import time
 import smtplib
 import sys
 
+# Global variables:
+global debug # This is only for printing some account info for the outgoing call, attempting external IP....
+debug = False
+
 # Constants
+global thisDeviceName
+thisDeviceName = "rpi01"
+
 emailFromAddress = 'yourSipUserNamelabs'
 emailAddressTo = 'yourEmailToAddress'
 emailSubject = 'Motion detected'
 emailTextAlternate = 'Motion was detected. An image is included in the alternate MIME of this email.'
 
 detectMotion = True  # Whether or not we have the motion detector SBC connected. True = connected.
+FLIPVERTICAL = True
 ACK =  6 # "Acknowledge" character
 NACK = 21 # "Non-Acknowledge" character
 
 # *** WARNING *** Do not change these unless you are SURE what you are doing! ***
-LEDPIN = 11  # Status - could do without
-MDPIN = 15  # Motion Detected pin
+# These pin numbers refer to the GPIO.BCM numbers.
+LEDPIN = 17  # Status - could do without
+MDPIN = 14  # Motion Detected pin
+PIRPIN = 4  # Set this to zero to always use the MDPIN. That's for legacy ePIR devices, which you probably don't need.
 
 # These can be changed, but beware of setting them too low because camera IO takes place during both
 # motion detection and sending email phases:
-#WAITSECONDS = 60  # Set to zero to send a message every time motion is detected.
-WAITSECONDS = 20  # Set to zero to send a message every time motion is detected.
+WAITSECONDS = 45  # Set to zero to send a message every time motion is detected.
+#WAITSECONDS = 20  # Set to zero to send a message every time motion is detected. Not recommended! :-)
 # WAITSECONDS also controls the shortest amount of time between printing "Motion detected".
 
-WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 90 or more, but use what you want.
+WAITEMAILSECONDS = 45  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 90 or more, but use what you want.
 #WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 60 or more, but use what you want.
-
-#global debug
-#debug = True
-
-global thisDeviceName
-thisDeviceName = "rpi01"
 
 def readLineCR(port):
   s = ''
@@ -66,6 +71,8 @@ def readLineCR(port):
 
 class SecurityCamera:
   def __init__(self, username='', password='', whitelist=[], camera='', snd_capture='', snd_playback=''):
+    if debug: print "__init__"
+    print "Initializaing...."
     #if debug:
     #print "setting audio_dscp"
     # Pulling my values from "Commonly used DSCP Values" table in this article:
@@ -73,9 +80,8 @@ class SecurityCamera:
     #self.core.audio_dscp = 26
     #self.core.video_dscp = 46 # 46 = High Priority Expedited Forwarding (EF) - TODO: Can this be lowered???
 
-    self.lastMessageTicks = time.time() + (WAITSECONDS)     # Wait one "cycle" so everything gets initialized
-    self.lastEmailTicks = time.time() + (WAITEMAILSECONDS)  # via the TCP/IP (UDP/TLS/DTLS).
-    #self.camera = self.core.video_device
+    self.lastMessageTicks = time.time() # Wait one "cycle" so everything gets initialized
+    self.lastEmailTicks = time.time()   # via the TCP/IP (UDP/TLS/DTLS).
 
     # Initialize email
     self.smtp = smtplib.SMTP()
@@ -85,39 +91,59 @@ class SecurityCamera:
     # Initialize the motion detector. This is for the Zilog ePIR ZDot SBC. It has more features via serial mode,
     # so that's what we'll use here.
     GPIO.setwarnings(False) # Disable "this channel already in use", etc.
+    GPIO.setmode(GPIO.BCM)
 
-    GPIO.setmode(GPIO.BOARD)
     self.port = serial.Serial("/dev/ttyAMA0", baudrate = 9600, timeout = 2)
 
-    # let the ePIR sensor wake up.
-    #time.sleep(10) # Arduino example says need delays between commands for proper operation. (I suspect for 9600 bps it needs time.)
-    time.sleep(5)
-    ch = 'U'
-    while ch == 'U': # Repeat loop if not stablized. (ePIR replies with the character 'U' until the device becomes stable)
-      time.sleep(1)
-      ch = self.port.read(1) # Sends status command to ePIR and assigns reply from ePIR to variable ch. (READ ONLY function)
-      #if debug:
-      print 'ch = %s' % (ch, )
-    #time.sleep(1)
-    #ch = readLine(self.port)
-    #if debug:
-
-    self.port.write('CM')
-    time.sleep(3) # If we don't do this, the next line will get garbage and will take an indermined amount of time!
-    result = readLineCR(self.port)
-
-    #if debug:
-    if result == 'R':
-      print 'ePIR reset!'
-    elif result == 'M':
-      print 'Motion detection mode confirmed.'
+    if PIRPIN <> 0:
+      # Assume newer PIR device, signal hooked to PIRPIN
+      print "Turning on motion sensor..."
+      if debug: print 'calling GPIO.setup(PIRPIN, ...)'
+      GPIO.setup(PIRPIN, GPIO.IN, GPIO.PUD_DOWN)
+      #GPIO.setup(PIRPIN, GPIO.IN)
+      GPIO.add_event_detect(PIRPIN, GPIO.RISING)  # add rising edge detection on a channel
+      if debug: print "calling setmode()"
+      # Loop until PIR indicates nothing is happening
+      print "Waiting for it to stabilize..."
+      while GPIO.input(PIRPIN) == 1:
+        time.sleep(0.01)
+      #while GPIO.input(PIRPIN)==1:
+      #    Current_State  = 0
+      print "PIR sensor is ready."
     else:
-      print 'Result = "%s"' % (result, )
+      # let the ePIR sensor wake up.
+      #time.sleep(10) # Arduino example says need delays between commands for proper operation. (I suspect for 9600 bps it needs time.)
+      time.sleep(5)
+      ch = 'U'
+      while ch == 'U': # Repeat loop if not stablized. (ePIR replies with the character 'U' until the device becomes stable)
+        time.sleep(1)
+        ch = self.port.read(1) # Sends status command to ePIR and assigns reply from ePIR to variable ch. (READ ONLY function)
+        #if debug:
+        if debug: print 'ch = %s' % (ch, )
+      #time.sleep(1)
+      #ch = readLine(self.port)
+      #if debug:
+
+      self.port.write('CM')
+      time.sleep(3) # If we don't do this, the next line will get garbage and will take an indermined amount of time!
+      result = readLineCR(self.port)
+
+      #if debug:
+      if result == 'R':
+        print 'ePIR reset!'
+      elif result == 'M':
+        print 'Motion detection mode confirmed.'
+      else:
+        print 'Result = "%s"' % (result, )
+
+      if debug:
+        print "ch = '%s'\r\nDevice Ready" % (ch, )
+      else:
+        print "\nePIR sensor ready."
 
     GPIO.setup(LEDPIN, GPIO.OUT) # Light (blink?) when motion detected
     GPIO.setup(MDPIN, GPIO.IN)
-
-    print "ch = '%s'\r\nDevice Ready" % (ch, )
+    self.flash_led()
 
     # Other member variables:
     self.imgStream = io.BytesIO()
@@ -130,7 +156,6 @@ class SecurityCamera:
     callbacks = {
       'call_state_changed': self.call_state_changed,
     }
-    print "__init__"
 
     # Initialize & Configure the linphone core
     logging.basicConfig(level=logging.INFO)
@@ -174,6 +199,9 @@ class SecurityCamera:
   def captureImage(self):
     # Create an in-memory stream
     with picamera.PiCamera() as camera:
+      if FLIPVERTICAL:
+        camera.vflip = True
+        camera.hflip = True # No separate option, just flip both directions.
       camera.start_preview()
       # Native mode: 2592 x 1944
       camera.resolution = (1920, 1080)
@@ -198,8 +226,7 @@ class SecurityCamera:
 
   def emailImage(self):
     #global debug
-    #if debug:
-    print "emailImage() called; self.configured = %s" % (str(self.configured), )
+    if debug: print "emailImage() called"
     self.captureImage()
     #return
 
@@ -283,9 +310,27 @@ class SecurityCamera:
     while not self.quit:
       if detectMotion and self.core.current_call == None:
         # Incoming calls have been handled, so check the motion detector:
-        motionDetected = GPIO.input(MDPIN)
+        motionDetected = False
+        if PIRPIN <> 0:
+          #motionDetected = GPIO.wait_for_edge(PIRPIN,GPIO.RISING)
+          #print "\rvalue = %s" % (value, ) ,
+          motionDetected = GPIO.event_detected(PIRPIN)
+          if debug:
+            print "motionDetected = %s" % (str(motionDetected))
+            print "GPIO.input(PIRPIN) = " % (str(GPIO.input(PIRPIN)), )
+          #motionDetected = GPIO.input(PIRPIN) # This will be 1 for detected, 0 otherwise.
+        else:
+          motionDetected = GPIO.input(MDPIN)
+          if motionDetected == 0: motionDetected = True
         #print '\rmotionDetected = %d' % (motionDetected, ) ,
-        if motionDetected == 0:
+        if motionDetected:
+          flashed = False
+          #if debug:
+          print '\nMotion detected!'
+          self.flash_led()
+          flashed = True
+          # GPIO.output(LEDPIN, True)
+          # GPIO.output(LEDPIN, False)
           if time.time() - self.lastMessageTicks > WAITSECONDS:
             for contact in self.whitelist:
               chat_room = self.core.get_chat_room_from_uri(contact)
@@ -298,29 +343,37 @@ class SecurityCamera:
               un = c.username
               cl = c.clean()
               po = c.port
-              print "dir(c) = %s" % (dir(c), )
-              print "DEBUG: po = %s, cl = %s, c = %s, ip = %s, ea = %s, un = %s" % (po, cl, c, ip, ea, un)
-              msg = chat_room.create_message('Motion detected on camera %s at %s' % (ea, dt.isoformat(' ')))
+              if debug:
+                print "dir(c) = %s" % (dir(c), )
+                print "DEBUG: po = %s, cl = %s, c = %s, ip = %s, ea = %s, un = %s" % (po, cl, c, ip, ea, un)
+              # nattype, external_ip, external_port = stun.get_ip_info('0.0.0.0', 54320, self.core.stun_server, 3478)
+              # if debug:
+              #   print 'nattype = %s, external_ip = %s, external_port = %s' % (nattype, external_ip, external_port)
+              # sipaddress = 'sip:yourSipUserName@%s:%s' %(external_ip, external_port)
+              # if debug:
+              #   print 'sipaddress = %s' % (sipaddress, )
+              msg = chat_room.create_message('Motion detected on %s at %s' % (ea, dt.isoformat(' ')))
               chat_room.send_chat_message(msg)
               self.lastMessageTicks = time.time()
-            #if debug:
-            print '\nMotion detected!'
-            for j in range(0,10):
-              GPIO.output(LEDPIN, True)
-              time.sleep(0.05)
-              GPIO.output(LEDPIN, False)
-              time.sleep(0.05)
-            GPIO.output(LEDPIN, True)
-            GPIO.output(LEDPIN, False)
 
           # Note that times for message and email are independent.
           if time.time() - self.lastEmailTicks >= WAITEMAILSECONDS:
+            if not flashed:
+              self.flash_led()
             self.lastEmailTicks = time.time()
             self.emailImage()
       #else:
       #  time.sleep(0.01) #
       self.core.iterate()
       #time.sleep(0.03)
+
+  def flash_led(self):
+    for j in range(0, 10):
+      GPIO.output(LEDPIN, True)
+      time.sleep(0.05)
+      GPIO.output(LEDPIN, False)
+      time.sleep(0.05)
+
 
 def main(argc, argv):
   try:
