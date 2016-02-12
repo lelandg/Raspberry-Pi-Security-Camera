@@ -7,6 +7,7 @@
 #
 # Please let me know if you have questions!
 # Modifications by: Leland Green - yourEmailToAddress
+__version__ = "0.1.2"
 
 import datetime
 import picamera
