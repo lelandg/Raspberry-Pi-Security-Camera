@@ -7,7 +7,10 @@
 #
 # Please let me know if you have questions!
 # Modifications by: Leland Green - yourEmailToAddress
+<<<<<<< HEAD
 __version__ = "0.1.2"
+=======
+>>>>>>> origin/master
 
 import datetime
 import picamera
@@ -18,13 +21,17 @@ from email.MIMEImage import MIMEImage
 import RPi.GPIO as GPIO
 import io
 import logging
+<<<<<<< HEAD
 # import stun
+=======
+>>>>>>> origin/master
 import serial
 import signal
 import time
 import smtplib
 import sys
 
+<<<<<<< HEAD
 # Global variables:
 global debug # This is only for printing some account info for the outgoing call, attempting external IP....
 debug = False
@@ -33,17 +40,24 @@ debug = False
 global thisDeviceName
 thisDeviceName = "rpi01"
 
+=======
+# Constants
+>>>>>>> origin/master
 emailFromAddress = 'yourSipUserNamelabs'
 emailAddressTo = 'yourEmailToAddress'
 emailSubject = 'Motion detected'
 emailTextAlternate = 'Motion was detected. An image is included in the alternate MIME of this email.'
 
 detectMotion = True  # Whether or not we have the motion detector SBC connected. True = connected.
+<<<<<<< HEAD
 FLIPVERTICAL = True
+=======
+>>>>>>> origin/master
 ACK =  6 # "Acknowledge" character
 NACK = 21 # "Non-Acknowledge" character
 
 # *** WARNING *** Do not change these unless you are SURE what you are doing! ***
+<<<<<<< HEAD
 # These pin numbers refer to the GPIO.BCM numbers.
 LEDPIN = 17  # Status - could do without
 MDPIN = 14  # Motion Detected pin
@@ -58,6 +72,24 @@ WAITSECONDS = 45  # Set to zero to send a message every time motion is detected.
 WAITEMAILSECONDS = 45  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 90 or more, but use what you want.
 #WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 60 or more, but use what you want.
 
+=======
+LEDPIN = 11  # Status - could do without
+MDPIN = 15  # Motion Detected pin
+
+# These can be changed, but beware of setting them too low because camera IO takes place during both
+# motion detection and sending email phases:
+WAITSECONDS = 60  # Set to zero to send a message every time motion is detected.
+# WAITSECONDS also controls the shortest amount of time between printing "Motion detected".
+WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 90 or more, but use what you want.
+#WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 60 or more, but use what you want.
+
+#global debug
+#debug = True
+
+global thisDeviceName
+thisDeviceName = "rpi01"
+
+>>>>>>> origin/master
 def readLineCR(port):
   s = ''
   while  True:
@@ -72,8 +104,11 @@ def readLineCR(port):
 
 class SecurityCamera:
   def __init__(self, username='', password='', whitelist=[], camera='', snd_capture='', snd_playback=''):
+<<<<<<< HEAD
     if debug: print "__init__"
     print "Initializaing...."
+=======
+>>>>>>> origin/master
     #if debug:
     #print "setting audio_dscp"
     # Pulling my values from "Commonly used DSCP Values" table in this article:
@@ -81,8 +116,14 @@ class SecurityCamera:
     #self.core.audio_dscp = 26
     #self.core.video_dscp = 46 # 46 = High Priority Expedited Forwarding (EF) - TODO: Can this be lowered???
 
+<<<<<<< HEAD
     self.lastMessageTicks = time.time() # Wait one "cycle" so everything gets initialized
     self.lastEmailTicks = time.time()   # via the TCP/IP (UDP/TLS/DTLS).
+=======
+    self.lastMessageTicks = time.time() - (WAITSECONDS )
+    self.lastEmailTicks = time.time() - (WAITEMAILSECONDS )
+    #self.camera = self.core.video_device
+>>>>>>> origin/master
 
     # Initialize email
     self.smtp = smtplib.SMTP()
@@ -92,6 +133,7 @@ class SecurityCamera:
     # Initialize the motion detector. This is for the Zilog ePIR ZDot SBC. It has more features via serial mode,
     # so that's what we'll use here.
     GPIO.setwarnings(False) # Disable "this channel already in use", etc.
+<<<<<<< HEAD
     GPIO.setmode(GPIO.BCM)
 
     self.port = serial.Serial("/dev/ttyAMA0", baudrate = 9600, timeout = 2)
@@ -145,18 +187,60 @@ class SecurityCamera:
     GPIO.setup(LEDPIN, GPIO.OUT) # Light (blink?) when motion detected
     GPIO.setup(MDPIN, GPIO.IN)
     self.flash_led()
+=======
+
+    GPIO.setmode(GPIO.BOARD)
+    self.port = serial.Serial("/dev/ttyAMA0", baudrate = 9600, timeout = 2)
+
+    # let the ePIR sensor wake up.
+    #time.sleep(10) # Arduino example says need delays between commands for proper operation. (I suspect for 9600 bps it needs time.)
+    time.sleep(5)
+    ch = 'U'
+    while ch == 'U': # Repeat loop if not stablized. (ePIR replies with the character 'U' until the device becomes stable)
+      time.sleep(1)
+      ch = self.port.read(1) # Sends status command to ePIR and assigns reply from ePIR to variable ch. (READ ONLY function)
+      #if debug:
+      print 'ch = %s' % (ch, )
+    #time.sleep(1)
+    #ch = readLine(self.port)
+    #if debug:
+
+    self.port.write('CM');
+    time.sleep(3) # If we don't do this, the next line will get garbage and will take an indermined amount of time!
+    result = readLineCR(self.port)
+
+    #if debug:
+    if result == 'R':
+      print 'ePIR reset!'
+    elif result == 'M':
+      print 'Motion detection mode confirmed.'
+    else:
+      print 'Result = "%s"' % (result, )
+
+    GPIO.setup(LEDPIN, GPIO.OUT) # Light (blink?) when motion detected
+    GPIO.setup(MDPIN, GPIO.IN)
+
+    print "ch = '%s'\r\nDevice Ready" % (ch, )
+>>>>>>> origin/master
 
     # Other member variables:
     self.imgStream = io.BytesIO()
     #time.sleep(2) #Allow time for ePIR warming-up
 
     self.quit = False
+<<<<<<< HEAD
     self.username = ""
     self.current_call = None
+=======
+>>>>>>> origin/master
     self.whitelist = whitelist
     callbacks = {
       'call_state_changed': self.call_state_changed,
     }
+<<<<<<< HEAD
+=======
+    print "__init__"
+>>>>>>> origin/master
 
     # Initialize & Configure the linphone core
     logging.basicConfig(level=logging.INFO)
@@ -166,7 +250,11 @@ class SecurityCamera:
     self.core.max_calls = 1
     self.core.video_adaptive_jittcomp_enabled = False
     self.core.adaptive_rate_control_enabled = False
+<<<<<<< HEAD
     #self.core.quality_reporting_enabled = False # This fails straight away.
+=======
+    #self.core.quality_reporting_enabled = False
+>>>>>>> origin/master
     self.core.echo_cancellation_enabled = False
     self.core.video_capture_enabled = True
     self.core.video_display_enabled = False
@@ -200,15 +288,22 @@ class SecurityCamera:
   def captureImage(self):
     # Create an in-memory stream
     with picamera.PiCamera() as camera:
+<<<<<<< HEAD
       if FLIPVERTICAL:
         camera.vflip = True
         camera.hflip = True # No separate option, just flip both directions.
+=======
+>>>>>>> origin/master
       camera.start_preview()
       # Native mode: 2592 x 1944
       camera.resolution = (1920, 1080)
       #camera.framerate = 30
       # Wait for the automatic gain control to settle
+<<<<<<< HEAD
       #camera.annotate_text = "You are SO BUSTED! This image has ALREADY been emailed to security!" # Fun! :-)
+=======
+      # camera.annotate_text = "You are so busted! A copy of this image has ALREADY been emailed to security!"
+>>>>>>> origin/master
       time.sleep(2)
       # Now fix the values
       camera.shutter_speed = camera.exposure_speed
@@ -227,7 +322,12 @@ class SecurityCamera:
 
   def emailImage(self):
     #global debug
+<<<<<<< HEAD
     if debug: print "emailImage() called"
+=======
+    #if debug:
+    print "emailImage() called; self.configured = %s" % (str(self.configured), )
+>>>>>>> origin/master
     self.captureImage()
     #return
 
@@ -278,7 +378,10 @@ class SecurityCamera:
       if call.remote_address.as_string_uri_only() in self.whitelist:
         params = core.create_call_params(call)
         core.accept_call_with_params(call, params)
+<<<<<<< HEAD
         self.current_call = call
+=======
+>>>>>>> origin/master
       else:
         core.decline_call(call, linphone.Reason.Declined)
         for contact in self.whitelist:
@@ -289,10 +392,15 @@ class SecurityCamera:
           chat_room.send_chat_message(msg)
     elif state == linphone.CallState.End:
       print "Call ended normally."
+<<<<<<< HEAD
       self.current_call = None
     elif state == linphone.CallState.Error:
       print "Error ... ending call!"
       self.current_call = None
+=======
+    elif state == linphone.CallState.Error:
+      print "Error ... ending call!"
+>>>>>>> origin/master
       core.end_call(call)
 
   def configure_sip_account(self, username, password):
@@ -304,13 +412,17 @@ class SecurityCamera:
     self.core.add_proxy_config(proxy_cfg)
     auth_info = self.core.create_auth_info(username, None, password, None, None, 'sip.linphone.org')
     self.core.add_auth_info(auth_info)
+<<<<<<< HEAD
     self.username = username
+=======
+>>>>>>> origin/master
 
   def run(self):
 
     while not self.quit:
       if detectMotion and self.core.current_call == None:
         # Incoming calls have been handled, so check the motion detector:
+<<<<<<< HEAD
         motionDetected = False
         if PIRPIN <> 0:
           #motionDetected = GPIO.wait_for_edge(PIRPIN,GPIO.RISING)
@@ -332,12 +444,18 @@ class SecurityCamera:
           flashed = True
           # GPIO.output(LEDPIN, True)
           # GPIO.output(LEDPIN, False)
+=======
+        motionDetected = GPIO.input(MDPIN)
+        #print '\rmotionDetected = %d' % (motionDetected, ) ,
+        if motionDetected == 0:
+>>>>>>> origin/master
           if time.time() - self.lastMessageTicks > WAITSECONDS:
             for contact in self.whitelist:
               chat_room = self.core.get_chat_room_from_uri(contact)
               if not chat_room:
                 continue
               dt = datetime.datetime.now()
+<<<<<<< HEAD
               c = self.core.primary_contact_parsed
               ip = self.core.upnp_external_ipaddress
               ea = c.as_string()
@@ -361,6 +479,23 @@ class SecurityCamera:
           if time.time() - self.lastEmailTicks >= WAITEMAILSECONDS:
             if not flashed:
               self.flash_led()
+=======
+              msg = chat_room.create_message('Motion detected on camera at %s' % (dt.isoformat(' ')))
+              chat_room.send_chat_message(msg)
+              self.lastMessageTicks = time.time()
+            #if debug:
+            print '\nMotion detected!'
+            for j in range(0,10):
+              GPIO.output(LEDPIN, True)
+              time.sleep(0.05)
+              GPIO.output(LEDPIN, False)
+              time.sleep(0.05)
+            GPIO.output(LEDPIN, True)
+            GPIO.output(LEDPIN, False)
+
+          # Note that times for message and email are independent.
+          if time.time() - self.lastEmailTicks >= WAITEMAILSECONDS:
+>>>>>>> origin/master
             self.lastEmailTicks = time.time()
             self.emailImage()
       #else:
@@ -368,6 +503,7 @@ class SecurityCamera:
       self.core.iterate()
       #time.sleep(0.03)
 
+<<<<<<< HEAD
   def flash_led(self):
     for j in range(0, 10):
       GPIO.output(LEDPIN, True)
@@ -376,6 +512,8 @@ class SecurityCamera:
       time.sleep(0.05)
 
 
+=======
+>>>>>>> origin/master
 def main(argc, argv):
   try:
     # These are your SIP username and password
