@@ -27,27 +27,28 @@ import sys
 
 # Global variables:
 global debug # This is only for printing some account info for the outgoing call, attempting external IP....
-debug = False
+debug = True
 
 # Constants
 global thisDeviceName
 thisDeviceName = "rpi01"
 
 emailFromAddress = 'yourSipUserNamelabs'
-emailAddressTo = ['yourEmailToAddress', 'yourAdditionalEmail(Add more here)']
+#emailAddressTo = ['yourEmailToAddress', 'yourAdditionalEmail(Add more here)']
+emailAddressTo = 'yourEmailToAddress'
 emailSubject = 'Motion detected'
 emailTextAlternate = 'Motion was detected. An image is included in the alternate MIME of this email.'
 
 detectMotion = True  # Whether or not we have the motion detector SBC connected. True = connected.
-FLIPVERTICAL = True
+FLIPVERTICAL = False
 ACK =  6 # "Acknowledge" character
 NACK = 21 # "Non-Acknowledge" character
 
 # *** WARNING *** Do not change these unless you are SURE what you are doing! ***
 # These pin numbers refer to the GPIO.BCM numbers.
 LEDPIN = 17  # Status - could do without
-MDPIN = 14  # Motion Detected pin (on ePIR)
-PIRPIN = 4  # Set this to zero to always use the MDPIN. That's for legacy ePIR devices, which you probably don't need.
+MDPIN = 22  # Motion Detected pin (on ePIR)
+PIRPIN = 0  # Set this to zero to always use the MDPIN. That's for legacy ePIR devices, which you probably don't need.
 
 # These can be changed, but beware of setting them too low because camera IO takes place during both
 # motion detection and sending email phases:
@@ -93,6 +94,7 @@ class SecurityCamera:
     # so that's what we'll use here.
     GPIO.setwarnings(False) # Disable "this channel already in use", etc.
     GPIO.setmode(GPIO.BCM)
+    #GPIO.setmode(GPIO.BOARD)
 
     self.port = serial.Serial("/dev/ttyAMA0", baudrate = 9600, timeout = 2)
 
@@ -100,7 +102,8 @@ class SecurityCamera:
       # Assume newer PIR device, signal hooked to PIRPIN
       print "Turning on motion sensor..."
       if debug: print 'calling GPIO.setup(PIRPIN, ...)'
-      GPIO.setup(PIRPIN, GPIO.IN, GPIO.PUD_DOWN)
+      if PIRPIN <> 0:
+        GPIO.setup(PIRPIN, GPIO.IN, GPIO.PUD_DOWN)
       #GPIO.setup(PIRPIN, GPIO.IN)
       GPIO.add_event_detect(PIRPIN, GPIO.RISING)  # add rising edge detection on a channel
       if debug: print "calling setmode()"
@@ -163,7 +166,7 @@ class SecurityCamera:
     signal.signal(signal.SIGINT, self.signal_handler)
     linphone.set_log_handler(self.log_handler)
     self.core = linphone.Core.new(callbacks, None, None)
-    self.core.max_calls = 2
+    self.core.max_calls = 1
     self.core.video_adaptive_jittcomp_enabled = False
     self.core.adaptive_rate_control_enabled = False
     #self.core.quality_reporting_enabled = False # This fails straight away.
@@ -172,6 +175,8 @@ class SecurityCamera:
     self.core.video_display_enabled = False
     self.core.stun_server = 'stun.linphone.org'
     self.core.firewall_policy = linphone.FirewallPolicy.PolicyUseIce
+    self.core.set_text_port_range(31267, 31267)
+    self.core.set_video_port_range(5060, 5060)
     if len(camera):
       self.core.video_device = camera
     if len(snd_capture):
@@ -225,9 +230,18 @@ class SecurityCamera:
       camera.stop_preview()
     return self.imgStream
 
+  global shownDebugInfo
+  shownDebugInfo = False
   def emailImage(self):
     #global debug
-    if debug: print "emailImage() called"
+    # if not shownDebugInfo:
+    #   shownDebugInfo = True
+    #   print "get_text_port_range() = %s" % (self.core.get_text_port_range(1,9999))
+    #   print "get_video_port_range() = %s" % (self.core.get_video_port_range(1,9999))
+
+
+    if debug:
+      print "emailImage() called"
     self.captureImage()
     #return
 
@@ -298,7 +312,7 @@ class SecurityCamera:
   def configure_sip_account(self, username, password):
     # Configure the SIP account
     proxy_cfg = self.core.create_proxy_config()
-    proxy_cfg.identity_address = self.core.create_address('sip:{username}@sip.linphone.org'.format(username=username))
+    proxy_cfg.identity_address = self.core.create_address('sip:{username}@sip.linphone.org:5060'.format(username=username))
     proxy_cfg.server_addr = 'sip:sip.linphone.org;transport=tls'
     proxy_cfg.register_enabled = True
     self.core.add_proxy_config(proxy_cfg)
@@ -307,7 +321,6 @@ class SecurityCamera:
     self.username = username
 
   def run(self):
-
     while not self.quit:
       if detectMotion and self.core.current_call == None:
         # Incoming calls have been handled, so check the motion detector:
@@ -322,10 +335,12 @@ class SecurityCamera:
           #motionDetected = GPIO.input(PIRPIN) # This will be 1 for detected, 0 otherwise.
         else:
           motionDetected = GPIO.input(MDPIN)
-          if motionDetected == 0: motionDetected = True
+          if motionDetected == 0:
+            motionDetected = True
+          else:
+            motionDetected = False
         #print '\rmotionDetected = %d' % (motionDetected, ) ,
         if motionDetected:
-          flashed = False
           #if debug:
           print '\nMotion detected!'
           self.flash_led()
@@ -333,7 +348,9 @@ class SecurityCamera:
           # GPIO.output(LEDPIN, True)
           # GPIO.output(LEDPIN, False)
           if time.time() - self.lastMessageTicks > WAITSECONDS:
+            if debug: print "notifying contacts..."
             for contact in self.whitelist:
+              if debug: print "notifying %s" % (contact, )
               chat_room = self.core.get_chat_room_from_uri(contact)
               if not chat_room:
                 continue
@@ -367,6 +384,12 @@ class SecurityCamera:
       #  time.sleep(0.01) #
       self.core.iterate()
       #time.sleep(0.03)
+      # if debug:
+      #   # print "get_text_port_range() = %s" % (self.core.get_text_port_range())
+      #   # print "get_video_port_range() = %s" % (self.core.get_video_port_range())
+      #   for st in self.core.sip_transports:
+      #     print "sip_transport = %s" % (str(st))
+
 
   def flash_led(self):
     for j in range(0, 10):
