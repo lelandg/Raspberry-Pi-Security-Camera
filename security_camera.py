@@ -34,7 +34,7 @@ global thisDeviceName
 thisDeviceName = "rpi01"
 
 emailFromAddress = 'yourSipUserNamelabs'
-emailAddressTo = 'yourEmailToAddress'
+emailAddressTo = ['yourEmailToAddress', 'yourAdditionalEmail(Add more here)']
 emailSubject = 'Motion detected'
 emailTextAlternate = 'Motion was detected. An image is included in the alternate MIME of this email.'
 
@@ -163,7 +163,7 @@ class SecurityCamera:
     signal.signal(signal.SIGINT, self.signal_handler)
     linphone.set_log_handler(self.log_handler)
     self.core = linphone.Core.new(callbacks, None, None)
-    self.core.max_calls = 1
+    self.core.max_calls = 2
     self.core.video_adaptive_jittcomp_enabled = False
     self.core.adaptive_rate_control_enabled = False
     #self.core.quality_reporting_enabled = False # This fails straight away.
@@ -235,7 +235,7 @@ class SecurityCamera:
     msgRoot = MIMEMultipart('related')
     msgRoot['Subject'] = 'Motion detected'
     msgRoot['From'] = emailFromAddress
-    msgRoot['To'] = emailAddressTo
+    msgRoot['To'] = 'Security Team for camera ' + thisDeviceName #emailAddressTo
     msgRoot.preamble = 'This is a multi-part message in MIME format.'
 
     # Encapsulate the plain and HTML versions of the message body in an
@@ -380,7 +380,8 @@ def main(argc, argv):
   try:
     # These are your SIP username and password
     cam = SecurityCamera(username='yourSipUserName', password='yourSipPassword', \
-                         whitelist=['sip:yourAccount@sip.linphone.org'], \
+                         whitelist=['sip:yourAccount@sip.linphone.org',
+                                    'sip:yourAdditionalSIPAddressesHere@sip.linphone.org'], \
                          camera='V4L2: /dev/video0', \
                          snd_capture='ALSA: Set [C-Media USB Headphone Set]', \
                          snd_playback='ALSA: USB Audio [USB Audio]')
