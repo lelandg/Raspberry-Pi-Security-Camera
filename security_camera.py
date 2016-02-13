@@ -7,7 +7,7 @@
 #
 # Please let me know if you have questions!
 # Modifications by: Leland Green - yourEmailToAddress
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 import datetime
 import picamera
@@ -34,8 +34,8 @@ global thisDeviceName
 thisDeviceName = "rpi01"
 
 emailFromAddress = 'yourSipUserNamelabs'
-#emailAddressTo = ['yourEmailToAddress', 'yourAdditionalEmail(Add more here)']
-emailAddressTo = 'yourEmailToAddress'
+#emailAddressTo = ['yourEmailToAddress', 'yourAdditionalEmail(Add more here)'] # Do it like this for several,
+emailAddressTo = 'yourEmailToAddress'                          # or like this for just one recipient.
 emailSubject = 'Motion detected'
 emailTextAlternate = 'Motion was detected. An image is included in the alternate MIME of this email.'
 
@@ -52,11 +52,11 @@ PIRPIN = 0  # Set this to zero to always use the MDPIN. That's for legacy ePIR d
 
 # These can be changed, but beware of setting them too low because camera IO takes place during both
 # motion detection and sending email phases:
-WAITSECONDS = 45  # Set to zero to send a message every time motion is detected.
+WAITSECONDS = 30  # Set to zero to send a message every time motion is detected.
 #WAITSECONDS = 20  # Set to zero to send a message every time motion is detected. Not recommended! :-)
 # WAITSECONDS also controls the shortest amount of time between printing "Motion detected".
 
-WAITEMAILSECONDS = 45  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 90 or more, but use what you want.
+WAITEMAILSECONDS = 30  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 90 or more, but use what you want.
 #WAITEMAILSECONDS = 60  # How long to wait between sending emails. Independent of WAITSECONDS. I recommend 60 or more, but use what you want.
 
 def readLineCR(port):
@@ -87,14 +87,11 @@ class SecurityCamera:
 
     # Initialize email
     self.smtp = smtplib.SMTP()
-    #self.smtp.connect('smtp.gmail.com', 587)
-    #self.smtp.starttls() # TODO: Can this be moved out of the iteration? Is it expensive?
 
     # Initialize the motion detector. This is for the Zilog ePIR ZDot SBC. It has more features via serial mode,
     # so that's what we'll use here.
     GPIO.setwarnings(False) # Disable "this channel already in use", etc.
     GPIO.setmode(GPIO.BCM)
-    #GPIO.setmode(GPIO.BOARD)
 
     self.port = serial.Serial("/dev/ttyAMA0", baudrate = 9600, timeout = 2)
 
@@ -122,11 +119,7 @@ class SecurityCamera:
       while ch == 'U': # Repeat loop if not stablized. (ePIR replies with the character 'U' until the device becomes stable)
         time.sleep(1)
         ch = self.port.read(1) # Sends status command to ePIR and assigns reply from ePIR to variable ch. (READ ONLY function)
-        #if debug:
         if debug: print 'ch = %s' % (ch, )
-      #time.sleep(1)
-      #ch = readLine(self.port)
-      #if debug:
 
       self.port.write('CM')
       time.sleep(3) # If we don't do this, the next line will get garbage and will take an indermined amount of time!
@@ -166,17 +159,22 @@ class SecurityCamera:
     signal.signal(signal.SIGINT, self.signal_handler)
     linphone.set_log_handler(self.log_handler)
     self.core = linphone.Core.new(callbacks, None, None)
-    self.core.max_calls = 1
+    self.core.max_calls = 2
     self.core.video_adaptive_jittcomp_enabled = False
     self.core.adaptive_rate_control_enabled = False
     #self.core.quality_reporting_enabled = False # This fails straight away.
     self.core.echo_cancellation_enabled = False
     self.core.video_capture_enabled = True
     self.core.video_display_enabled = False
+
+    # tr = self.core.sip_transports
+    # tr.dtls_port = 5060
+    # tr.tcp_port = 5061
+    # tr.udp_port = 5062
+    # tr.tls_port = 5063
+    # self.core.sip_transports = tr
     self.core.stun_server = 'stun.linphone.org'
     self.core.firewall_policy = linphone.FirewallPolicy.PolicyUseIce
-    self.core.set_text_port_range(31267, 31267)
-    self.core.set_video_port_range(5060, 5060)
     if len(camera):
       self.core.video_device = camera
     if len(snd_capture):
@@ -233,11 +231,6 @@ class SecurityCamera:
   global shownDebugInfo
   shownDebugInfo = False
   def emailImage(self):
-    #global debug
-    # if not shownDebugInfo:
-    #   shownDebugInfo = True
-    #   print "get_text_port_range() = %s" % (self.core.get_text_port_range(1,9999))
-    #   print "get_video_port_range() = %s" % (self.core.get_video_port_range(1,9999))
 
 
     if debug:
@@ -293,6 +286,11 @@ class SecurityCamera:
         params = core.create_call_params(call)
         core.accept_call_with_params(call, params)
         self.current_call = call
+        if debug:
+            print 'sip_transports: dtls = %d, tcp = %d, udp = %d, tls = %d' % \
+                  (self.core.sip_transports.dtls_port, self.core.sip_transports.tcp_port, self.core.sip_transports.udp_port, self.core.sip_transports.tls_port)
+            print 'sip_transports_used: dtls = %d, tcp = %d, udp = %d, tls = %d' % \
+                  (self.core.sip_transports_used.dtls_port, self.core.sip_transports_used.tcp_port, self.core.sip_transports_used.udp_port, self.core.sip_transports_used.tls_port)
       else:
         core.decline_call(call, linphone.Reason.Declined)
         for contact in self.whitelist:
@@ -327,7 +325,7 @@ class SecurityCamera:
         motionDetected = False
         if PIRPIN <> 0:
           #motionDetected = GPIO.wait_for_edge(PIRPIN,GPIO.RISING)
-          #print "\rvalue = %s" % (value, ) ,
+          #if debug: print "\rvalue = %s" % (value, ) ,
           motionDetected = GPIO.event_detected(PIRPIN)
           if debug:
             print "motionDetected = %s" % (str(motionDetected))
@@ -339,10 +337,21 @@ class SecurityCamera:
             motionDetected = True
           else:
             motionDetected = False
-        #print '\rmotionDetected = %d' % (motionDetected, ) ,
         if motionDetected:
-          #if debug:
-          print '\nMotion detected!'
+
+          print '\n\a*Motion detected!*\n'
+          if debug:
+            print 'sip_transports: dtls = %d, tcp = %d, udp = %d, tls = %d' % \
+                  (self.core.sip_transports.dtls_port, self.core.sip_transports.tcp_port, \
+                   self.core.sip_transports.udp_port, self.core.sip_transports.tls_port)
+            print 'sip_transports_used: dtls = %d, tcp = %d, udp = %d, tls = %d' % \
+                  (self.core.sip_transports_used.dtls_port, self.core.sip_transports_used.tcp_port, \
+                   self.core.sip_transports_used.udp_port, self.core.sip_transports_used.tls_port)
+            print 'self.core.upnp_external_ipaddress = %s' % (self.core.upnp_external_ipaddress, )
+            print 'self.core.nat_address = %s' % (self.core.nat_address, )
+            tr = self.core.sip_transports_used
+            print 'self.core.linphone_core_get_sip_transports_used = dtls = %d, tcp = %d, udp = %d, tls = %d' % \
+                  (tr.dtls_port, tr.tcp_port, tr.udp_port, tr.tls_port)
           self.flash_led()
           flashed = True
           # GPIO.output(LEDPIN, True)
@@ -383,12 +392,6 @@ class SecurityCamera:
       #else:
       #  time.sleep(0.01) #
       self.core.iterate()
-      #time.sleep(0.03)
-      # if debug:
-      #   # print "get_text_port_range() = %s" % (self.core.get_text_port_range())
-      #   # print "get_video_port_range() = %s" % (self.core.get_video_port_range())
-      #   for st in self.core.sip_transports:
-      #     print "sip_transport = %s" % (str(st))
 
 
   def flash_led(self):
