@@ -5,6 +5,6 @@ You will need to run the script with:
 
 sudo python security_camera.py
 
-because it uses an I/O device you need elevated permissions. 
+Because it uses an I/O device you need elevated permissions to run it. 
 
 This project also represents my first (serious) attempt at using GitHub as it was intended. You may see me open issues and then close them after a commit/merge. I hope that these comments prove useful to you.
