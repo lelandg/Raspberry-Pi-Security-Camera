@@ -2,12 +2,25 @@
 # Based on the "security camera" example Python script found on Linphone.org here:
 # https://wiki.linphone.org/wiki/index.php/Raspberrypi:start
 # Heavily modified to add motion detector features for Zilog ePIR SBC with ZDots. This is an advanced
-# version and I cannot find this exact model, so I think it's discontinued. Should work with minor
-# modifications (and removal of features?) on other motion detectors.
+# version and I cannot find this exact model, so I think it's discontinued.
+#
+# Now supports PIR sensor (newer style, lower power) by simply setting PIRPIN > 0.
+# The default is to use pin 4 (in BCM mode = GPIO4 = physical pin = 7 = BOARD mode pin 7).
+#
+# On the off-chance that you DO have an ePIR, simply set PIRPIN = 0 and MDPIN = pin 5 on the ePIR. You'll
+# actually want to refer to the Fritzing/PNG file for the schematic in that case, too. In order to support
+# all features (at a future date), I wired up all of the ePIR pins. So it's GPIO-hungry. But I can add things
+# like ambient light level (which I plan to do, BTW--even if I AM the only one with the module! :) ).
+#
+# Tip: If you want to disable the LED on the camera completely, add "disable_camera_led=1" (with no quotes) to
+# the end of the line in /boot/cmdline.txt.
 #
 # Please let me know if you have questions!
 # Modifications by: Leland Green - yourEmailToAddress
-__version__ = "0.1.3"
+import os
+import traceback
+
+__version__ = "0.1.5"
 
 import datetime
 import picamera
@@ -26,12 +39,14 @@ import smtplib
 import sys
 
 # Global variables:
-global debug # This is only for printing some account info for the outgoing call, attempting external IP....
-debug = True
+global debug
+debug = False # This is only for printing some info for the outgoing call, attempting external IP, etc....
 
 # Constants
-global thisDeviceName
 thisDeviceName = "rpi01"
+
+RECORDVIDEO = True # If you think you want a time lapse, please try a video first. Video is *less resource intnse*!
+RECORDTIMELAPSE = False
 
 emailFromAddress = 'yourSipUserNamelabs'
 #emailAddressTo = ['yourEmailToAddress', 'yourAdditionalEmail(Add more here)'] # Do it like this for several,
@@ -39,6 +54,7 @@ emailAddressTo = 'yourEmailToAddress'                          # or like this fo
 emailSubject = 'Motion detected'
 emailTextAlternate = 'Motion was detected. An image is included in the alternate MIME of this email.'
 
+global detectMotion
 detectMotion = True  # Whether or not we have the motion detector SBC connected. True = connected.
 FLIPVERTICAL = False
 ACK =  6 # "Acknowledge" character
@@ -46,9 +62,22 @@ NACK = 21 # "Non-Acknowledge" character
 
 # *** WARNING *** Do not change these unless you are SURE what you are doing! ***
 # These pin numbers refer to the GPIO.BCM numbers.
-LEDPIN = 17  # Status - could do without
-MDPIN = 22  # Motion Detected pin (on ePIR)
+LEDPIN = 17  # Status - could do without if you don't want the LED flashing. Remove all references to do so.
+MDPIN = 22  # Motion Detected pin (on ePIR). This can be any valid GPIO pin value, in BCM numbering scheme.
+#PIRPIN = 4  # Set this to zero to always use the MDPIN. That's for legacy ePIR devices, which you probably don't need.
 PIRPIN = 0  # Set this to zero to always use the MDPIN. That's for legacy ePIR devices, which you probably don't need.
+
+# Changes expected below this line. Careful changes. :)
+# Set GPIO for camera LED. Use 5 for Model A/B and 32 for Model B+.
+CAMLEDPIN = 32
+
+global blinkCamLed
+blinkCamLed = False
+
+global talkToEm
+talkToEm = True
+if talkToEm:
+  from espeak import espeak
 
 # These can be changed, but beware of setting them too low because camera IO takes place during both
 # motion detection and sending email phases:
@@ -68,13 +97,14 @@ def readLineCR(port):
       if ch == '\r' or ch == '':
         break
     except: # TODO: Add specific exceptions here.
-      pass # Will be a "ready to read, but no data", in my experience.
+      #if debug: traceback.print_exc() # Will be a "ready to read, but no data", in my experience.
+      pass
   return s
 
 class SecurityCamera:
   def __init__(self, username='', password='', whitelist=[], camera='', snd_capture='', snd_playback=''):
     if debug: print "__init__"
-    print "Initializaing...."
+    print "Initializaing jamPi System...."
     #if debug:
     #print "setting audio_dscp"
     # Pulling my values from "Commonly used DSCP Values" table in this article:
@@ -92,12 +122,27 @@ class SecurityCamera:
     # so that's what we'll use here.
     GPIO.setwarnings(False) # Disable "this channel already in use", etc.
     GPIO.setmode(GPIO.BCM)
+    GPIO.setup(CAMLEDPIN, GPIO.OUT, initial=False)
 
-    self.port = serial.Serial("/dev/ttyAMA0", baudrate = 9600, timeout = 2)
+    self.port = serial.Serial("/dev/ttyAMA0", baudrate = 9600, timeout=2)
+
+    print "Waiting for motion sensor to come online...."
+    #time.sleep(10) # Arduino example says need delays between commands for proper operation. (I suspect for 9600 bps it needs time.)
+    time.sleep(5)
+
+    self.imageDir = os.getcwd()
+    #self.imageDir = os.path.join(os.getcwd(), 'security-images')
+    if not os.path.exists(self.imageDir):
+      os.makedirs(self.imageDir)
+
+    self.videoDir = os.getcwd()
+    #self.videoDir = os.path.join(os.getcwd(), 'security-videos')
+    if not os.path.exists(self.videoDir):
+      os.makedirs(self.videoDir)
 
     if PIRPIN <> 0:
       # Assume newer PIR device, signal hooked to PIRPIN
-      print "Turning on motion sensor..."
+      print "Sensor online... Turning on motion sensor..."
       if debug: print 'calling GPIO.setup(PIRPIN, ...)'
       if PIRPIN <> 0:
         GPIO.setup(PIRPIN, GPIO.IN, GPIO.PUD_DOWN)
@@ -106,29 +151,38 @@ class SecurityCamera:
       if debug: print "calling setmode()"
       # Loop until PIR indicates nothing is happening
       print "Waiting for it to stabilize..."
-      while GPIO.input(PIRPIN) == 1:
-        time.sleep(0.01)
+      # while GPIO.input(PIRPIN) == 1:
+      #   time.sleep(0.01)
+      time.sleep(5)
       #while GPIO.input(PIRPIN)==1:
       #    Current_State  = 0
       print "PIR sensor is ready."
     else:
       # let the ePIR sensor wake up.
       #time.sleep(10) # Arduino example says need delays between commands for proper operation. (I suspect for 9600 bps it needs time.)
-      time.sleep(5)
       ch = 'U'
       while ch == 'U': # Repeat loop if not stablized. (ePIR replies with the character 'U' until the device becomes stable)
-        time.sleep(1)
+        #time.sleep(1)
         ch = self.port.read(1) # Sends status command to ePIR and assigns reply from ePIR to variable ch. (READ ONLY function)
         if debug: print 'ch = %s' % (ch, )
 
+      ch = readLineCR(self.port)
+      s = "ePIR"
+      if PIRPIN:
+        s = "PIR"
+      time.sleep(1)
+      #print "%s sensor device online..." % (s, )
+
       self.port.write('CM')
-      time.sleep(3) # If we don't do this, the next line will get garbage and will take an indermined amount of time!
+      time.sleep(1) # If we don't do this, the next line will get garbage and will take an indermined amount of time!
       result = readLineCR(self.port)
+
+      if len(result) > 1: result = result[-1]
 
       #if debug:
       if result == 'R':
         print 'ePIR reset!'
-      elif result == 'M':
+      elif result == 'M' or result == 'N':
         print 'Motion detection mode confirmed.'
       else:
         print 'Result = "%s"' % (result, )
@@ -140,7 +194,12 @@ class SecurityCamera:
 
     GPIO.setup(LEDPIN, GPIO.OUT) # Light (blink?) when motion detected
     GPIO.setup(MDPIN, GPIO.IN)
+
+    global blinkCamLed
+    val1 = blinkCamLed   # Only time we force a blinking LED is during initialization, so you know it's ready.
+    blinkCamLed = True
     self.flash_led()
+    blinkCamLed = val1
 
     # Other member variables:
     self.imgStream = io.BytesIO()
@@ -166,6 +225,21 @@ class SecurityCamera:
     self.core.echo_cancellation_enabled = False
     self.core.video_capture_enabled = True
     self.core.video_display_enabled = False
+    self.core.keep_alive_enabled = True # This is the default at time of writing.
+
+    self.core.mic_enabled = True
+
+    tr = self.core.sip_transports
+    # assert_equals(tr.udp_port, 5060) # default config
+    # assert_equals(tr.tcp_port, 5060) # default config
+    tr.udp_port = 5063
+    tr.tcp_port = 5067
+    tr.tls_port = 32737
+    tr.dtls_port = 32738
+    self.core.sip_transports = tr
+    tr = self.core.sip_transports
+    print 'Transports = UDP: %s, TCP %s, TLS %s, DTLS %s' % \
+          (tr.udp_port, tr.tcp_port, tr.tls_port, tr.dtls_port)
 
     # tr = self.core.sip_transports
     # tr.dtls_port = 5060
@@ -182,33 +256,37 @@ class SecurityCamera:
     if len(snd_playback):
       self.core.playback_device = snd_playback
 
-    # Only enable PCMU and PCMA audio codecs
+    # Only enable PCMU, PCMA and speex audio codecs
     for codec in self.core.audio_codecs:
-      if codec.mime_type == "PCMA" or codec.mime_type == "PCMU":
+      if codec.mime_type in ["PCMA", "PCMU"]: # "opus", "speex", "VP8", "H264"]: # Overkill! , "SILK"
         self.core.enable_payload_type(codec, True)
+        print "Adding codec %s..." % (codec.mime_type, )
       else:
         self.core.enable_payload_type(codec, False)
 
-    # Only enable VP8 video codec
+    # Only enable VP8 and H2.64 video codecs
     for codec in self.core.video_codecs:
-      if codec.mime_type == "VP8":
+      if codec.mime_type in ["VP8", "H264"]:
+        print "Adding codec %s..." % (codec.mime_type, )
         self.core.enable_payload_type(codec, True)
       else:
         self.core.enable_payload_type(codec, False)
 
+    print "Configuring SIP account..."
     self.configure_sip_account(username, password)
 
     self.configured = False
 
   def captureImage(self):
     # Create an in-memory stream
-    with picamera.PiCamera() as camera:
+    with picamera.PiCamera(sensor_mode=4) as camera: # A hack! Pin 0 causes it to not light at all.
+      camera.led = False
       if FLIPVERTICAL:
         camera.vflip = True
         camera.hflip = True # No separate option, just flip both directions.
       camera.start_preview()
       # Native mode: 2592 x 1944
-      camera.resolution = (1920, 1080)
+      camera.resolution = (1296, 972) #(1920, 1080)
       #camera.framerate = 30
       # Wait for the automatic gain control to settle
       #camera.annotate_text = "You are SO BUSTED! This image has ALREADY been emailed to security!" # Fun! :-)
@@ -228,15 +306,14 @@ class SecurityCamera:
       camera.stop_preview()
     return self.imgStream
 
-  global shownDebugInfo
-  shownDebugInfo = False
+
   def emailImage(self):
-
-
     if debug:
       print "emailImage() called"
     self.captureImage()
-    #return
+
+    #if RECORDVIDEO or RECORDTIMELAPSE:
+    #  return
 
     # Create the root message and fill in the from, to, and subject headers
     msgRoot = MIMEMultipart('related')
@@ -284,7 +361,15 @@ class SecurityCamera:
     if state == linphone.CallState.IncomingReceived:
       if call.remote_address.as_string_uri_only() in self.whitelist:
         params = core.create_call_params(call)
+        params.audio_enabled = True
+        params.audio_multicast_enabled = True
+        params.video_multicast_enabled = True
+        if talkToEm:
+          espeak.synth('Incoming call answered. You are being watched!')
+        if debug:
+          print "Call params:\r\n" "%s" % (str(params), )
         core.accept_call_with_params(call, params)
+        #call.microphone_volume_gain = 0.98 # Maximum value, I believe....
         self.current_call = call
         if debug:
             print 'sip_transports: dtls = %d, tcp = %d, udp = %d, tls = %d' % \
@@ -328,8 +413,7 @@ class SecurityCamera:
           #if debug: print "\rvalue = %s" % (value, ) ,
           motionDetected = GPIO.event_detected(PIRPIN)
           if debug:
-            print "motionDetected = %s" % (str(motionDetected))
-            print "GPIO.input(PIRPIN) = " % (str(GPIO.input(PIRPIN)), )
+            print "\rmotionDetected = %s, GPIO.input(PIRPIN) = %s" % (str(motionDetected), str(GPIO.input(PIRPIN))) ,
           #motionDetected = GPIO.input(PIRPIN) # This will be 1 for detected, 0 otherwise.
         else:
           motionDetected = GPIO.input(MDPIN)
@@ -337,9 +421,9 @@ class SecurityCamera:
             motionDetected = True
           else:
             motionDetected = False
-        if motionDetected:
 
-          print '\n\a*Motion detected!*\n'
+        if motionDetected:
+          print '\n*Motion detected!*\n'
           if debug:
             print 'sip_transports: dtls = %d, tcp = %d, udp = %d, tls = %d' % \
                   (self.core.sip_transports.dtls_port, self.core.sip_transports.tcp_port, \
@@ -372,6 +456,7 @@ class SecurityCamera:
               po = c.port
               if debug:
                 print "dir(c) = %s" % (dir(c), )
+                print "DEBUG: c.display_name = %s, c.username = %s, c.port = %s" % (c.display_name, c.username, c.port)
                 print "DEBUG: po = %s, cl = %s, c = %s, ip = %s, ea = %s, un = %s" % (po, cl, c, ip, ea, un)
               # nattype, external_ip, external_port = stun.get_ip_info('0.0.0.0', 54320, self.core.stun_server, 3478)
               # if debug:
@@ -385,10 +470,35 @@ class SecurityCamera:
 
           # Note that times for message and email are independent.
           if time.time() - self.lastEmailTicks >= WAITEMAILSECONDS:
-            if not flashed:
-              self.flash_led()
-            self.lastEmailTicks = time.time()
-            self.emailImage()
+            try:
+              if not flashed:
+                self.flash_led()
+              self.lastEmailTicks = time.time()
+              self.emailImage()
+              if talkToEm:
+                espeak.synth('An image has just been emailed to security. A video is being recorded of you even as we speak!')
+              if RECORDVIDEO:
+                with picamera.PiCamera(sensor_mode=1) as camera:
+                  camera.led = False
+                  # What resolution for video is best??? This is full 1080p
+                  camera.resolution = (1920, 1080) # (1296, 972)
+                  camera.start_recording(os.path.join(self.videoDir, 'security_camera-%s.h264' % (datetime.datetime.now().isoformat(' ')),))
+                  camera.wait_recording(WAITEMAILSECONDS/2)
+                  camera.stop_recording()
+              elif RECORDTIMELAPSE:
+                with picamera.PiCamera(sensor_mode=4) as camera: # 1296 x 972, 4:3
+                  camera.led = False
+                  camera.resolution = (1296, 972)
+                  print ('\rtime.time() - self.lastEmailTicks = %s, WAITEMAILSECONDS/2 = %d' % \
+                         (time.time() - self.lastEmailTicks, WAITEMAILSECONDS/2))
+                  while time.time() - self.lastEmailTicks <= WAITEMAILSECONDS/2:
+                    for filename in camera.capture_continuous(os.path.join(self.imageDir, 'img-%s{counter:03d}.jpg' % (datetime.datetime.now().isoformat(' '),))):
+                      self.core.iterate()
+                      print('\rCaptured %s' % filename) ,
+                      time.sleep(0.2) # wait 5 minutes
+            except KeyboardInterrupt:
+              self.quit = True
+              break
       #else:
       #  time.sleep(0.01) #
       self.core.iterate()
@@ -397,23 +507,27 @@ class SecurityCamera:
   def flash_led(self):
     for j in range(0, 10):
       GPIO.output(LEDPIN, True)
+      if blinkCamLed:
+        GPIO.output(CAMLEDPIN, True)
       time.sleep(0.05)
       GPIO.output(LEDPIN, False)
+      if blinkCamLed:
+        GPIO.output(CAMLEDPIN, False)
       time.sleep(0.05)
 
 
 def main(argc, argv):
   try:
-    # These are your SIP username and password
+    # These are your SIP username and password and system devices
     cam = SecurityCamera(username='yourSipUserName', password='yourSipPassword', \
                          whitelist=['sip:yourAccount@sip.linphone.org',
                                     'sip:yourAdditionalSIPAddressesHere@sip.linphone.org'], \
                          camera='V4L2: /dev/video0', \
-                         snd_capture='ALSA: Set [C-Media USB Headphone Set]', \
-                         snd_playback='ALSA: USB Audio [USB Audio]')
+                         snd_capture=' USB Audio [USB Audio]', \
+                         snd_playback=' ALSA [bcm2835 ALSA]')
     cam.run()
   except:
-    GPIO.cleanup()
+    traceback.print_exc()
   finally:
     GPIO.cleanup()
 
