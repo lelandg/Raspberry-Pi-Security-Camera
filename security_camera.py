@@ -104,7 +104,7 @@ def readLineCR(port):
 class SecurityCamera:
   def __init__(self, username='', password='', whitelist=[], camera='', snd_capture='', snd_playback=''):
     if debug: print "__init__"
-    print "Initializaing jamPi System...."
+    print "Initializaing jamPi System version %s..." % (__version__)
     #if debug:
     #print "setting audio_dscp"
     # Pulling my values from "Commonly used DSCP Values" table in this article:
@@ -275,6 +275,9 @@ class SecurityCamera:
     print "Configuring SIP account..."
     self.configure_sip_account(username, password)
 
+    if talkToEm:
+      espeak.synth('Security system is now online.')
+      time.sleep(2)
     self.configured = False
 
   def captureImage(self):
@@ -364,8 +367,6 @@ class SecurityCamera:
         params.audio_enabled = True
         params.audio_multicast_enabled = True
         params.video_multicast_enabled = True
-        if talkToEm:
-          espeak.synth('Incoming call answered. You are being watched!')
         if debug:
           print "Call params:\r\n" "%s" % (str(params), )
         core.accept_call_with_params(call, params)
@@ -376,6 +377,9 @@ class SecurityCamera:
                   (self.core.sip_transports.dtls_port, self.core.sip_transports.tcp_port, self.core.sip_transports.udp_port, self.core.sip_transports.tls_port)
             print 'sip_transports_used: dtls = %d, tcp = %d, udp = %d, tls = %d' % \
                   (self.core.sip_transports_used.dtls_port, self.core.sip_transports_used.tcp_port, self.core.sip_transports_used.udp_port, self.core.sip_transports_used.tls_port)
+        if talkToEm:
+          espeak.synth('Incoming call answered. You are being watched!')
+          time.sleep(2)
       else:
         core.decline_call(call, linphone.Reason.Declined)
         for contact in self.whitelist:
@@ -476,7 +480,8 @@ class SecurityCamera:
               self.lastEmailTicks = time.time()
               self.emailImage()
               if talkToEm:
-                espeak.synth('An image has just been emailed to security. A video is being recorded of you even as we speak!')
+                espeak.synth('An image has just been emailed to security. A video is being recorded of you, even as we speak.')
+                time.sleep(4)
               if RECORDVIDEO:
                 with picamera.PiCamera(sensor_mode=1) as camera:
                   camera.led = False
