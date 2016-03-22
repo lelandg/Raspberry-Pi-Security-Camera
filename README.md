@@ -3,6 +3,9 @@ This product is called JamPi. The name JamPi is
 Copyright (C) 2016 Leland Green... All rights reserved. 
 (On the name and graphic, only. You are free to use those in a non-commercial setting, only. For commercial purposes, you must remove them and state that your project was derived from the JamPi.)
 
+*Notice*
+I plan to have major updates for this project very soon. (Probably this week--the week of 2016.03.20.)
+
 *Features*
 * Uses the RaspiCamera as part of an integrated security system.
 * Motion detector (PIR/ePIR sensor) triggered events. When motion is detected: 
