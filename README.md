@@ -21,6 +21,7 @@ _See "Installation" below if you want to jump right in!
   * No limit to connection time! 
   * While connected to the live camera, the notification features are turned off. (This is to save on resources more than a lack of the Raspberry Pi, which is fully capable of doing everything simultaneously. 
   * Only people configured (in the Python script) are allowed to connect
+  * Works with a Raspberry Pi camera module (AKA "RaspiCam") *OR* a USB webcam! Preferably one that has hardware H2.64 compression.
   
 
 **Requirements**
