@@ -39,7 +39,7 @@ Because it uses an I/O device you need elevated permissions to run it.
 
 This project also represents my first (serious) attempt at using GitHub as it was intended. You may see me open issues and then close them after a commit/merge. I hope that these comments prove useful to you.
 
-* Installation *
+*Installation*
 * If you do not have git installed, run:
 *  sudo apt-get install git
 * Then always run this to start with (or else download & unzip all files to your home directory, or whichever one you want to run from). Only the program files will be installed to this directory. In keeping with Linux standards the log will alwas be /var/log/security_camera.log
