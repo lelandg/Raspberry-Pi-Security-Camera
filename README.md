@@ -1,13 +1,14 @@
 # Raspberry-Pi-Security-Camera
+**Copyright**
 This product is called JamPi. The name JamPi is
 Copyright (C) 2016 Leland Green... All rights reserved. 
 (On the name and graphic, only. You are free to use those in a non-commercial setting, only. For commercial purposes, you must remove them and state that your project was derived from the JamPi. Since the graphic is currently not used, just don't use the name JamPi and we'll be OK. Simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you change the code, when you must rename it. Fair? Thank you for your cooperation.)
 
-*Notice*
+**Notice**
 I plan to have major updates for this project very soon. (Probably this week--the week of 2016.03.20.)
 _See "Installation" below if you want to jump right in!
 
-*Features*
+**Features**
 * Uses the RaspiCamera as part of an integrated security system.
 * Motion detector (PIR/ePIR sensor) triggered events. When motion is detected: 
   * Send a chat message to a list of SIP addresses. This is only done every X seconds. (Configurable; Default=1 minute)
@@ -20,7 +21,7 @@ _See "Installation" below if you want to jump right in!
   * Only people configured (in the Python script) are allowed to connect
   
 
-*Requirements*
+**Requirements**
 
 This script requires custom hardware, which is included as a Fritzing/PNG files. Uses ePIR to detect motion. Emails a list of people when detected. Also is a Linphone server, so you can simultaneously connect to the camera for a live picture! (Right now is one-way on the Pi.)
 
@@ -39,7 +40,7 @@ Because it uses an I/O device you need elevated permissions to run it.
 
 This project also represents my first (serious) attempt at using GitHub as it was intended. You may see me open issues and then close them after a commit/merge. I hope that these comments prove useful to you.
 
-*Installation*
+**Installation**
 * If you do not have git installed, run:
     sudo apt-get install git
 * Then always run this to start with (or else download & unzip all files to your home directory, or whichever one you want to run from). Only the program files will be installed to this directory. In keeping with Linux standards the log will alwas be /var/log/security_camera.log
