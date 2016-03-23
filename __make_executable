@@ -1,0 +1,5 @@
+#!/bin/bash
+sudo nano chmod +x ./.startscript.sh
+sudo nano chmod +x ./security_off
+sudo nano chmod +x ./_showproc
+

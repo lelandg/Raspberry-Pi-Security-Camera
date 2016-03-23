@@ -1,0 +1,4 @@
+sudo kill -s KILL $(ps aux | grep 'sudo python security_camera.py' | awk -v i=1 -v j=2 'FNR == i {print $j}')
+sudo kill -s KILL $(ps aux | grep 'python security_camera.py' | awk -v i=1 -v j=2 'FNR == i {print $j}')
+cp /var/log/security_camera.log ./
+
