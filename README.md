@@ -59,9 +59,11 @@ sudo chmod +x ./__make_executable
 
 ./__make_executable
 
-* This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler. The three scripts have very different names to aid you in starting, stopping and showing the process (if any) for the currently running script. 
+* This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler by including three scripts. (See next section.)
 
 **Operation** 
+
+Three shell scripts are included to make operation of the Python script a snap. They have very different names to aid you in starting, stopping and showing the process (if any) for the currently running script. 
 
 You do *not* need to prefix these with "sudo". The scripts do that for you! :) These scripts are:
 * .startscript.sh -- Starts the security_camera.py Python script, waits 3 seconds, then starts a "tail -f /var/log/security_camera.log" (The script is ran in the background and will print very little, if anything directly to the console. Everything's in the log, now! :)
