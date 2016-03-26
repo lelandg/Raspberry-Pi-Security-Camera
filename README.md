@@ -5,7 +5,8 @@
 
 This product is called JamPi. The name JamPi is
 Copyright (C) 2016 Leland Green... All rights reserved. 
-(On the name and graphic, only. You are free to use those in a non-commercial setting, only. For commercial purposes, you must remove them and state that your project was derived from the JamPi. Since the graphic is currently not used, just don't use the name JamPi and we'll be OK. Simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you change the code, when you must rename it. Fair? Thank you for your cooperation.)
+Released under MIT license so you can use for any purpose.
+(Copyright is on the graphic and "JamPi" name. You are free to use those in a non-commercial setting, only. For commercial purposes, you must remove them and state that your project was derived from the JamPi. Since the graphic is currently not used, just don't use the name JamPi and we'll be OK. Simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you change the code, when you must rename it. Fair? Thank you for your cooperation.)
 
 **Notice**
 
@@ -55,8 +56,12 @@ This project also represents my first (serious) attempt at using GitHub as it wa
 * run:
    sudo chmod +x ./__make_executable
    ./__make_executable
-* This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler. The three scripts have very different names to aid you in starting, stopping and showing the process (if any) for the currently running script. You do *not* need to prefix these with "sudo". The scripts do that for you! :) These scripts are:
+* This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler. The three scripts have very different names to aid you in starting, stopping and showing the process (if any) for the currently running script. 
+
+**Operation** 
+You do *not* need to prefix these with "sudo". The scripts do that for you! :) These scripts are:
 * .startscript.sh -- Starts the security_camera.py Python script, waits 3 seconds, then starts a "tail -f /var/log/security_camera.log" (The script is ran in the background and will print very little, if anything directly to the console. Everything's in the log, now! :)
 * security_off -- Kills the currently running script. You can run this multiple times, it won't kill anything else. (Unless the python script has exactly the same name, but then it would be the same script. Ha!)
 * _showproc -- Shows any currently running security camera Python scripts. Note that if you see only one line, you should also see a "grep" in the command portion of the output, which means that is the _showproc script, itself, *not* the Python script. So if you only see one line in the output, that means you have all instances of the security camera script stopped.
-* **WARNING** Do *not* run more than one instance of the script! The shell scripts *attempt* to prevent you from doing this by calling 'security_off' before it actually "turns it back on". ***Caution*** Running multiple instances of the script is certainly unsupported and behavior is undefined! ***Caution***
+
+**WARNING** Do *not* run more than one instance of the script! The shell scripts *attempt* to prevent you from doing this by calling 'security_off' before it actually "turns it back on". ***Caution*** Running multiple instances of the script is certainly unsupported and behavior is undefined! ***Caution***
