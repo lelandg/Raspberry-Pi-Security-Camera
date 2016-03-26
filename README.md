@@ -1,5 +1,5 @@
 # Raspberry-Pi-Security-Camera
-![](jampi.svg)
+![](jampi.png)
 
 **Copyright**
 
