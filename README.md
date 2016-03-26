@@ -24,7 +24,7 @@ _See "Installation" below if you want to jump right in!
   * While connected to the live camera, the notification features are turned off. (This is to save on resources more than a lack of the Raspberry Pi, which is fully capable of doing everything simultaneously. 
   * Only people configured (in the Python script) are allowed to connect
   * Works with a Raspberry Pi camera module (AKA "RaspiCam") *OR* a USB webcam! Preferably one that has hardware H2.64 compression.
-  * Optionally use as a "video doorbell". Put the button and camera (and optional motion sensor) outside the door and record a picture of everyone who rings your doorbell, plus, it rings through to your SIP videophone (Linphone is a good one), so you can see video of the person! Right now you can talk to them, but they can't talk to you (sound is only working one way... maybe just my system?)
+* Optionally use as a "video doorbell". Put the button and camera (and optional motion sensor) outside the door and record a picture of everyone who rings your doorbell, plus, it rings through to your SIP videophone (Linphone is a good one), so you can see video of the person! Right now you can talk to them, but they can't talk to you (sound is only working one way... maybe just my system?)
   
 
 **Requirements**
