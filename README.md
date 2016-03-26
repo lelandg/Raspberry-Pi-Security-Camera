@@ -54,10 +54,8 @@ This project also represents my first (serious) attempt at using GitHub as it wa
 * After that, when updating, always run that same command to start with (or else download & unzip all files to your home directory, or whichever one you want to run from). Only the program files will be installed to this directory. In keeping with Linux standards the log will alwas be /var/log/security_camera.log
 *  This file is owned by root so you may need to chown on it if you can't access it. I just copy to Windows and use my favorite GUI editor.
 * run:
-
-sudo chmod +x ./__make_executable
-
-./__make_executable
+  sudo chmod +x ./__make_executable
+  ./__make_executable
 
 * This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler by including three scripts. (See next section.)
 
