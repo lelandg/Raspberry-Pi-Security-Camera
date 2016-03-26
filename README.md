@@ -1,4 +1,6 @@
 # Raspberry-Pi-Security-Camera
+![](jampi.svg)
+
 **Copyright**
 
 This product is called JamPi. The name JamPi is
