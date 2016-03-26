@@ -40,7 +40,7 @@ If you want to find programs in your home directory without typing the preceding
 * nano .bashrc
 *  Scroll to the end of the file and add the line:
 *   export PATH=$PATH:/home/pi
-* After this change you can simply type ".startscript.sh". (And *actually* just type ".sta" and press <tab>. It will probably type the rest of the command for you. Same thing with the other shell scripts! Save your typing for Github! :)
+* After this change you can simply type ".startscript.sh". (And *actually* just type ".sta" and press the <<tab>>. It will probably type the rest of the command for you. Same thing with the other shell scripts! Save your typing for Github! :)
 
 Because it uses an I/O device you need elevated permissions to run it. 
 
