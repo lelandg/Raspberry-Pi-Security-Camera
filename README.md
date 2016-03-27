@@ -3,14 +3,13 @@
 
 **Copyright**
 
-This product is called JamPi. The name JamPi is
 Copyright (C) 2016 Leland Green... All rights reserved. 
 Released under MIT license so you can use for any purpose.
 See License.md for the licensing text.
 
 (The graphic and "JamPi" name must be removed for any commercial, or non-open-source projects. You are free to use those in a non-commercial setting, only. For commercial purposes, you must remove them and state that your project was derived from the JamPi. Since the graphic is currently not used, just don't use the name JamPi and we'll be OK. Simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you change the code, when you must rename it. Fair? Thank you for your cooperation.)
 
-_See "Installation" below if you want to jump right in!
+See "Installation" below if you want to jump right in!
 
 **Features**
 * Works with a Raspberry Pi camera module (AKA "RaspiCam") *OR* a USB webcam! Preferably one that has hardware H2.64 compression.
