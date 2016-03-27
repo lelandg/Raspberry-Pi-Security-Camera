@@ -63,8 +63,15 @@ cd Raspberry-Pi-Security-Camera
 sudo chmod +x ./__make_executable
 ./__make_executable
 ```
-
 * This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler by including three scripts. (See next section.)
+* Install python-espeak
+```
+sudo apt-get install python-espeak
+```
+* Install Python Linphone
+  * Please see https://wiki.linphone.org/wiki/index.php/Raspberrypi:start for complete instructions. 
+
+* If you hit errors, on a Raspberry Pi, especially, please open an issue under this project. I appreciate all reports, even if it's something you do not understand!
 
 **Operation** 
 
