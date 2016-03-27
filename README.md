@@ -1,17 +1,22 @@
 # Raspberry-Pi-Security-Camera
 ![JamPi Logo](jampi.png)
 
-**Copyright**
-
 Copyright (C) 2016 Leland Green... All rights reserved. 
 Released under MIT license so you can use for any purpose.
 See License.md for the licensing text.
 
-(The graphic and "JamPi" name must be removed for any commercial, or non-open-source projects. You are free to use those in a non-commercial setting, only. For commercial purposes, you must remove them and state that your project was derived from the JamPi. Since the graphic is currently not used, just don't use the name JamPi and we'll be OK. Simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you change the code, when you must rename it. Fair? Thank you for your cooperation.)
+(
+**Definitions**
 
-See "Installation" below if you want to jump right in!
+* **Significant changes** : Anything that makes the project commercial; non--open-source; or changes the core functionality of the project (i.e., it is no longer a security camera or video doorbell
+
+If you makek **significant changes** I require only two changes: **the graphic** and **JamPi** name must be removed. You are free to use those (name and graphic) in a **non-commercial** , **or educational** setting, *only*. For a project with significant changes, you must remove them and state that your project was derived from the JamPi in the comments of the source code. Since the graphic is currently not used simply delete it, and just do not use the name **JamPi** and we'll be OK. **Simply search/replace in the file security_camera.py for "JamPi" and replace it with your product name** ; simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you make **significant changes** , when you must rename it. Fair? Thank you for your cooperation.)
+
+See *Installation* below if you want to jump right in!
 
 **Features**
+
+* This is an active project! New features are planned (no matter *when* you read this! :D ). So I hope you'll check back once-in-a-while, or follow me on Google+ or Facebook. (Everything I do is 100% visible to the public.)
 * Works with a Raspberry Pi camera module (AKA "RaspiCam") *OR* a USB webcam! Preferably one that has hardware H2.64 compression.
 * Motion detector (PIR/ePIR sensor) triggered events. When motion is detected: 
   * Send a chat message to a list of SIP addresses. This is only done every X seconds. (Configurable; Default=1 minute)
