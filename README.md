@@ -5,7 +5,6 @@ Copyright (C) 2016 Leland Green... All rights reserved.
 Released under MIT license so you can use for any purpose.
 See License.md for the licensing text.
 
-(
 **Definitions**
 
 * **Significant changes** : Anything that makes the project commercial; non--open-source; or changes the core functionality of the project (i.e., it is no longer a security camera or video doorbell
