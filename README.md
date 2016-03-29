@@ -33,6 +33,11 @@ See *Installation* below if you want to jump right in!
 * This script requires custom hardware, which is included as a Fritzing/PNG files. Uses a PIR/ePIR sensor to detect motion. 
 * It is recommended that you have two SIP accounts, one for the security camera device and one for you. This greatly simplifies connecting to the camera via Linphone. Simply use the "address" that is the SIP account running on the device.
 
+Sending video is resource-intensive so you should boot to Console mode (probably with auto-login if this is to be a remote deployment). To be clear, I could never get video to work when I booted my Pi to X desktop. So that is unsupported at this time. (This may be a misunderstanding of something on my part so please speak-up if you have info that may help me.)
+
+First, change to the directory with:
+`cd Raspberry-Pi-Security-Camera`
+
 Because it uses an I/O device you need elevated permissions to run it. So you will need to run the script with:
 `./.startscript.sh`
 *or*
