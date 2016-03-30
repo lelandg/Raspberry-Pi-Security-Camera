@@ -39,11 +39,12 @@ First, change to the directory with:
 `cd Raspberry-Pi-Security-Camera`
 
 Because it uses an I/O device you need elevated permissions to run it. So you will need to run the script with:
-`./.startscript.sh`
+`.startscript.sh`
 *or*
 `sudo python security_camera.py`
 
-  TIP: If you want to find programs in your home directory without typing the preceding "./", whether or not you're running as sudo, you can add to your .bashrc with:
+**TIP** 
+ If you want to find programs in your home directory without typing the preceding "./", whether or not you're running as sudo, you can add to your .bashrc with:
   * `nano .bashrc`
   *  Scroll to the end of the file and add the line:
      `export PATH=$PATH:/home/pi`
@@ -65,8 +66,8 @@ cd Raspberry-Pi-Security-Camera
 *  This file is owned by root so you may need to chown on it if you can't access it. I just copy to Windows and use my favorite GUI editor.
 * run:
 ```
-sudo chmod +x ./__make_executable
-./__make_executable
+sudo chmod +x __make_executable
+__make_executable
 ```
 * This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler by including three scripts. (See next section.)
 * Install python-espeak
@@ -83,9 +84,9 @@ sudo apt-get install python-espeak
 Three shell scripts are included to make operation of the Python script a snap. They have very different names to aid you in starting, stopping and showing the process (if any) for the currently running script. 
 
 You do *not* need to prefix these with "sudo". The scripts do that for you! :) These scripts are:
-* `./.startscript.sh` -- Starts the security_camera.py Python script, waits 3 seconds, then starts a `tail -f /var/log/security_camera.log` (The script is run in the background and will print very little, if anything directly to the console. Everything's in the log, now! :)
-* `./security_off` -- Kills the currently running script. You can run this multiple times, it won't kill anything else. (Unless the python script has exactly the same name, but then it would be the same script. Ha!)
-* `./_showproc` -- Shows any currently running security camera Python scripts. Note that if you see only one line, you should also see a "grep" in the command portion of the output, which means that is the _showproc script, itself, *not* the Python script. So if you only see one line in the output, that means you have all instances of the security camera script stopped.
+* `.startscript.sh` -- Starts the security_camera.py Python script, waits 3 seconds, then starts a `tail -f /var/log/security_camera.log` (The script is run in the background and will print very little, if anything directly to the console. Everything's in the log, now! :)
+* `security_off` -- Kills the currently running script. You can run this multiple times, it won't kill anything else. (Unless the python script has exactly the same name, but then it would be the same script. Ha!)
+* `_showproc` -- Shows any currently running security camera Python scripts. Note that if you see only one line, you should also see a "grep" in the command portion of the output, which means that is the _showproc script, itself, *not* the Python script. So if you only see one line in the output, that means you have all instances of the security camera script stopped.
 
 **WARNING** Do *not* run more than one instance of the script! The shell scripts *attempt* to prevent you from doing this by calling `security_off` before it actually "turns it back on". 
 
