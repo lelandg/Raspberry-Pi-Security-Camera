@@ -74,14 +74,17 @@ sudo chmod +x __make_executable
 __make_executable
 ```
 * This last command simply runs chmod on the three utility scripts for you. :) It is technically not required--you can run with only "sudo python security_camera.py" if you want to! But that's a mouthful, so I've made it simpler by including three scripts. (See next section.)
-* Install python-espeak
-```
-sudo apt-get install python-espeak
-```
 * Install Python Linphone
   * Please see https://wiki.linphone.org/wiki/index.php/Raspberrypi:start for complete instructions. 
 
-* If you hit errors, on a Raspberry Pi, especially, please open an issue under this project. I appreciate all reports, even if it's something you do not understand!
+**Optionally**
+
+* Either install python-espeak or set "talkToEm = False" in the script. (Change the existing line, don't add one!)
+```
+sudo apt-get install python-espeak
+```
+
+* If you hit errors, on a Raspberry Pi, especially, please open an issue under this project. I appreciate all reports, even if it's something you do not understand! Please help me to understand what you do not understand, if at all possible. If not, just send me the log file, preferably via your DropBox (or similar service). If you need an invitation to drop box, please let me know and I will send you one.
 
 **Operation** 
 
@@ -91,6 +94,8 @@ You do *not* need to prefix these with "sudo". The scripts do that for you! :) T
 * `.startscript.sh` -- Starts the security_camera.py Python script, waits 3 seconds, then starts a `tail -f /var/log/security_camera.log` (The script is run in the background and will print very little, if anything directly to the console. Everything's in the log, now! :)
 * `security_off` -- Kills the currently running script. You can run this multiple times, it won't kill anything else. (Unless the python script has exactly the same name, but then it would be the same script. Ha!)
 * `_showproc` -- Shows any currently running security camera Python scripts. Note that if you see only one line, you should also see a "grep" in the command portion of the output, which means that is the _showproc script, itself, *not* the Python script. So if you only see one line in the output, that means you have all instances of the security camera script stopped.
+
+**IMPORTANT NOTE** In your home directory you will find the file `.linphonerc` ( `~/.linphonerc` should always access it). This file has a line for `contact=`. I recommend opening this file and changing it to contain your current SIP account so that it does not conflict with that given in the script. Depending on how you've used Linphone on RPi, you may have other options that conflict! I cannot hope to document all of those, so you need to look up the documentation for these.
 
 **WARNING** Do *not* run more than one instance of the script! The shell scripts *attempt* to prevent you from doing this by calling `security_off` before it actually "turns it back on". 
 
