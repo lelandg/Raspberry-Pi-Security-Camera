@@ -7,9 +7,13 @@ See License.md for the licensing text.
 
 **Definitions**
 
-* **Significant changes** : Anything that makes the project commercial; non--open-source; or changes the core functionality of the project (i.e., it is no longer a security camera or video doorbell
+* **Significant Changes** : Anything that makes the project commercial; non--open-source; or changes the core functionality of the project (i.e., it is no longer a security camera or video doorbell
+* **Commercial Software** : If you are *now making money* from the project or there is *any chance* that you will *ever make money* from the project, it is considered commercial software.
+* **Educational Setting** : Within the context of teaching. Not necessarily teaching about the Raspberry Pi, but teaching about any subject where this project will be useful. While every institution of formal education would certainly qualify, such an instution is *not* required. E.g., a tutor could certainly claim that they were also using within an *educational setting*.
 
-If you makek **significant changes** I require only two changes: **the graphic** and **JamPi** name must be removed. You are free to use those (name and graphic) in a **non-commercial** , **or educational** setting, *only*. For a project with significant changes, you must remove them and state that your project was derived from the JamPi in the comments of the source code. Since the graphic is currently not used simply delete it, and just do not use the name **JamPi** and we'll be OK. **Simply search/replace in the file security_camera.py for "JamPi" and replace it with your product name** ; simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you make **significant changes** , when you must rename it. Fair? Thank you for your cooperation.)
+If you make **significant changes** I require only two things: **the graphic (JamPi Logo)** and **JamPi name** must be removed. You are free to use those (name and graphic) in a **non-commercial** , **or educational** setting, *only*. For a project with significant changes, you must (1) remove them from any place they are shown to the end-user and (2) state that your project was derived from the **JamPi** project in the documentation and/or the comments of the source code. In that case you must also include a link to the original project page. (This will suffice: https://github.com/lelandg/Raspberry-Pi-Security-Camera)
+
+Since the graphic is currently not used, you can just delete it, and then do not show the name **JamPi** to the *end-user* and we will be OK with each other. :-) **Simply search/replace in the file security_camera.py for "JamPi" and replace it with your product name** ; simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you make **significant changes** , when you must rename it. Fair? Thank you for your cooperation.)
 
 See *Installation* below if you want to jump right in!
 
