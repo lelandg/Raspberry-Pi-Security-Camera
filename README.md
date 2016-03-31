@@ -95,6 +95,17 @@ You do *not* need to prefix these with "sudo". The scripts do that for you! :) T
 * `security_off` -- Kills the currently running script. You can run this multiple times, it won't kill anything else. (Unless the python script has exactly the same name, but then it would be the same script. Ha!)
 * `_showproc` -- Shows any currently running security camera Python scripts. Note that if you see only one line, you should also see a "grep" in the command portion of the output, which means that is the _showproc script, itself, *not* the Python script. So if you only see one line in the output, that means you have all instances of the security camera script stopped.
 
+**NOTES**
+
+If you see an error like this: `WARNING: ./share/sounds/linphone/rings/oldphone.wav does not exist`, you can run:
+```
+sudo find / -iname '*.wav' > /home/pi/soundfiles.txt && less ~/soundfiles.txt
+```
+to find all sound files on your machine. Once the list is displayed (and stored in `~/soundfiles.txt`, if you see a line with `/usr/local/lib/python2.7/dist-packages/linphone/share/sounds/linphone/ringback.wav`, use the parent directory as input to this command `sudo ln -s /usr/local/lib/python2.7/dist-packages/linphone/share/sounds/linphone `; such that, for this example:
+```
+sudo ln -s /usr/local/lib/python2.7/dist-packages/linphone/share/sounds/linphone /usr/share/sounds/linphone
+```
+
 **IMPORTANT NOTE** In your home directory you will find the file `.linphonerc` ( `~/.linphonerc` should always access it). This file has a line for `contact=`. I recommend opening this file and changing it to contain your current SIP account so that it does not conflict with that given in the script. Depending on how you've used Linphone on RPi, you may have other options that conflict! I cannot hope to document all of those, so you need to look up the documentation for these.
 
 **WARNING** Do *not* run more than one instance of the script! The shell scripts *attempt* to prevent you from doing this by calling `security_off` before it actually "turns it back on". 
