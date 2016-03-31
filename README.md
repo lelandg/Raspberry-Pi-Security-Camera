@@ -45,14 +45,15 @@ First, change to the directory with:
 Because it uses an I/O device you need elevated permissions to run it. So you will need to run the script with:
 `.startscript.sh`
 *or*
-`sudo python security_camera.py`
+`sudo python security_camera.py`.
+However, you should *always* use `.startscript.sh`. If you want something different, edit the script once and it will be changed from then on! :)
 
 **TIP** 
- If you want to find programs in your home directory without typing the preceding "./", whether or not you're running as sudo, you can add to your .bashrc with:
-  * `nano .bashrc`
+ If you want to find programs in your home directory without typing the preceding `./`, whether or not you're running as sudo, you can add to your `.bashrc` with:
+  * `nano ~/.bashrc`
   *  Scroll to the end of the file and add the line:
      `export PATH=$PATH:/home/pi`
-  * After this change you can simply type `.startscript.sh`. (And *actually* just type ".sta" and press the [tab]. It will probably type the rest of the command for you. Same thing with the other shell scripts! Save your typing for Github! :)
+  * After this change you can simply type `.startscript.sh`. (And *actually* just type ".sta" and press the [tab]. It will probably type the rest of the command for you. Same thing with the other shell scripts! Save your typing for Github! :) 
 
 This project also represents my first (serious) attempt at using GitHub as it was intended. You may see me open issues and then close them after a commit/merge. I hope that these comments prove useful to you.
 
@@ -92,6 +93,11 @@ Three shell scripts are included to make operation of the Python script a snap. 
 
 You do *not* need to prefix these with "sudo". The scripts do that for you! :) These scripts are:
 * `.startscript.sh` -- Starts the security_camera.py Python script, waits 3 seconds, then starts a `tail -f /var/log/security_camera.log` (The script is run in the background and will print very little, if anything directly to the console. Everything's in the log, now! :)
+*This is the recommended way to run your `security_camera.py` script!* This script will: 
+  * Reinitialize the log file. So if you have errors you want to keep, rename `/var/log/security_camera.log` to something unique *before* you restart the script, or it will be overwritten. Or better yet, rename them into your DropBox folder and email me a link! :)
+  * Stop any previosly running script (but only one!)
+  * Start the script in the background
+  * `tail -f /var/log/security_camera.log`, so you see all messages on the console. (You could disable the `tail` command if speed is an issue.) Yet they are still saved in the log file, until you restart the script.
 * `security_off` -- Kills the currently running script. You can run this multiple times, it won't kill anything else. (Unless the python script has exactly the same name, but then it would be the same script. Ha!)
 * `_showproc` -- Shows any currently running security camera Python scripts. Note that if you see only one line, you should also see a "grep" in the command portion of the output, which means that is the _showproc script, itself, *not* the Python script. So if you only see one line in the output, that means you have all instances of the security camera script stopped.
 
