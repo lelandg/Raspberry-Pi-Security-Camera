@@ -92,11 +92,11 @@ sudo apt-get install python-espeak
 Three shell scripts are included to make operation of the Python script a snap. They have very different names to aid you in starting, stopping and showing the process (if any) for the currently running script. 
 
 You do *not* need to prefix these with "sudo". The scripts do that for you! :) These scripts are:
-* `.startscript.sh` -- Starts the security_camera.py Python script, waits 3 seconds, then starts a `tail -f /var/log/security_camera.log` (The script is run in the background and will print very little, if anything directly to the console. Everything's in the log, now! :)
+* `.startscript.sh` -- Starts the security_camera.py after some basic "housekeeping".
 *This is the recommended way to run your `security_camera.py` script!* This script will: 
-  * Reinitialize the log file. So if you have errors you want to keep, rename `/var/log/security_camera.log` to something unique *before* you restart the script, or it will be overwritten. Or better yet, rename them into your DropBox folder and email me a link! :)
-  * Stop any previosly running script (but only one!)
-  * Start the script in the background
+  * Stop one previosly running script. (But only one!)
+  * Remove the log file. So if you have errors you want to keep, rename `/var/log/security_camera.log` to something unique *before* you restart the script, or it will be overwritten. Or better yet, rename them into your DropBox folder and email me a link! :)
+  * Start `security_camera.py` running in the background.
   * `tail -f /var/log/security_camera.log`, so you see all messages on the console. (You could disable the `tail` command if speed is an issue.) Yet they are still saved in the log file, until you restart the script.
 * `security_off` -- Kills the currently running script. You can run this multiple times, it won't kill anything else. (Unless the python script has exactly the same name, but then it would be the same script. Ha!)
 * `_showproc` -- Shows any currently running security camera Python scripts. Note that if you see only one line, you should also see a "grep" in the command portion of the output, which means that is the _showproc script, itself, *not* the Python script. So if you only see one line in the output, that means you have all instances of the security camera script stopped.
