@@ -15,7 +15,7 @@ If you make **significant changes** I require only two things: **the graphic (Ja
 
 Since the graphic is currently not used, you can just delete it, and then do not show the name **JamPi** to the *end-user* and we will be OK with each other. :-) **Simply search/replace in the file security_camera.py for "JamPi" and replace it with your product name** ; simple... especially since that's only used in the initialization log message. You are allowed to leave that in, until you make **significant changes** , when you must rename it. Fair? Thank you for your cooperation.)
 
-See *Installation* below if you want to jump right in!
+See *Requirements* and then *Installation* below if you want to jump right in!
 
 **Features**
 
