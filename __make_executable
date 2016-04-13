@@ -1,5 +1,5 @@
 #!/bin/bash
-sudo nano chmod +x ./.startscript.sh
-sudo nano chmod +x ./security_off
-sudo nano chmod +x ./_showproc
-
+sudo chmod +x ./install_python_linphone.sh
+sudo chmod +x ./.startscript.sh
+sudo chmod +x ./security_off
+sudo chmod +x ./_showproc
