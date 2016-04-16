@@ -69,6 +69,7 @@ VIDEOLENTGH = ((WAITEMAILSECONDS / 4) * 3)
 RECORDTIMELAPSE = False
 
 camera = 'V4L2: /dev/video0'  # This *should* pick up either the RaspiCam *or* a USB web cam. :)
+RESOLUTION = (1296, 972)  # For high-latency networks, you probably want more like this. Max is (2592, 1944)
 VIDEORESOLUTION = (1920, 1080)  # This is not transmitted, only stored on SD card/disk.
 
 # Possible values are:
